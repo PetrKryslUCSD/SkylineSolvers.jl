@@ -9,11 +9,14 @@ using Profile
 using ProfileView
 
 K = DataDrop.retrieve_matrix("K.h5")
+@show size(K)
 I, J, V = findnz(K)     
 sky = SkylineMatrix(I, J, V, size(K, 1))
 @time SkylineLDLT.ldlt_factorize!(sky)
-sky = SkylineMatrix(I, J, V, size(K, 1))
-@profview SkylineLDLT.ldlt_factorize!(sky)
+sky = SkylineMatrix(I, J, Float32.(V), size(K, 1))
+@time SkylineLDLT.ldlt_factorize!(sky)
+# sky = SkylineMatrix(I, J, V, size(K, 1))
+# @profview SkylineLDLT.ldlt_factorize!(sky)
 # b = rand(size(A, 1))
 # x = ldlt_solve(sky, b)
 # @test norm(A \ b - x) / norm(x) < 1e-6
