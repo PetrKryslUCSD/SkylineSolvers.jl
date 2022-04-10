@@ -1,0 +1,15 @@
+name = "SkylineLDLT"
+uuid = "cd81f4f7-d126-42dc-ae02-23abebb1f683"
+authors = ["Petr Krysl <pkrysl@ucsd.edu>"]
+version = "0.1.0"
+
+[deps]
+DataDrop = "aa547a04-dd37-49ab-8e73-656744f8a8fc"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Profile = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
+ProfileView = "c46f51b8-102a-5cf2-8d2c-8597cb0e0da7"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SymRCM = "286e6d88-80af-4590-acc9-0001b223b9bd"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
