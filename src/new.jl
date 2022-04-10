@@ -255,9 +255,14 @@ function _inner_ldlt_factorize!(M, F, das)
             iij = idx(das, i, j)
             s = F[iij]
             mij = max(firstr(das, i), firstr(das, j))
-            for r in mij:i-1
-                s -= F[idx(das, r, i)]*F[idx(das, r, j)];
+            if mij <= i-1
+                ii = idx(das, mij, i)
+                jj = idx(das, mij, j)
+                s -= dot(view(F, ii.+(0:1:(i-1-mij))), view(F, jj.+(0:1:(i-1-mij))))
             end
+            # for r in mij:i-1
+            #     s -= F[idx(das, r, i)]*F[idx(das, r, j)];
+            # end
             F[iij] = s
         end
         s = F[idx(das, j, j)]
