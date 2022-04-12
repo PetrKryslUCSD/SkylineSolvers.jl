@@ -1,45 +1,59 @@
-module mbas001
+module mcolsol001
 using Test
-using SkylineLDLT: update_skyline!
+using SkylineSolvers.Colsol: update_skyline!
 
 function test()
     dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
     bars = [1 2; 1 6; 6 5; 5 2; 6 2; 2 3; 3 4; 2 4]
-    skylngs = fill(0, maximum(dofnums[:]))
+    mht = fill(0, maximum(dofnums[:]))
     for b in 1:size(bars, 1)
-        update_skyline!(skylngs, [d for d in dofnums[bars[b, :], :]])
+        update_skyline!(mht, [d for d in dofnums[bars[b, :], :]])
     end
-    # @show skylngs
-    @test skylngs == [1, 2, 3, 4, 5, 6, 7, 8, 3, 4, 5, 6]
+    # @show mht
+    @test mht == [0, 1, 2, 3, 4, 5, 6, 7, 2, 3, 4, 5]
     true
 end
 end
-using .mbas001
-mbas001.test()
+using .mcolsol001
+mcolsol001.test()
 
-module mbas002
+module mcolsol003
 using Test
-using SkylineLDLT: update_skyline!, diagonal_addresses
+using SkylineSolvers.Colsol: update_skyline!, diagonal_addresses
+function test()
+    # Example From Section 12.2 of Bathe Finite Element Procedures (1997)
+    mht = [0, 1, 1, 3, 1, 3, 1, 3]
+    maxa = diagonal_addresses(mht)
+    @test maxa == [1, 2, 4, 6, 10, 12, 16, 18, 22]
+    true
+end
+end
+using .mcolsol003
+mcolsol003.test()
+
+module mcolsol002
+using Test
+using SkylineSolvers.Colsol: update_skyline!, diagonal_addresses
 function test()
     dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
     bars = [1 2; 1 6; 6 5; 5 2; 6 2; 2 3; 3 4; 2 4]
-    skylngs = fill(0, maximum(dofnums[:]))
+    mht = fill(0, maximum(dofnums[:]))
     for b in 1:size(bars, 1)
-        update_skyline!(skylngs, [d for d in dofnums[bars[b, :], :]])
+        update_skyline!(mht, [d for d in dofnums[bars[b, :], :]])
     end
-    # @show skylngs
-    @test skylngs == [1, 2, 3, 4, 5, 6, 7, 8, 3, 4, 5, 6]
-    d = diagonal_addresses(skylngs)
-    @test d == [1, 3, 6, 10, 15, 21, 28, 36, 39, 43, 48, 54]  
+    # @show mht
+    @test mht == [0, 1, 2, 3, 4, 5, 6, 7, 2, 3, 4, 5]
+    maxa = diagonal_addresses(mht)
+    @test maxa == [1, 2, 4, 7, 11, 16, 22, 29, 37, 40, 44, 49, 55] 
     true
 end
 end
-using .mbas002
-mbas002.test()
+using .mcolsol002
+mcolsol002.test()
 
-module mbas004
+module mcolsol004
 using Test
-using SkylineLDLT: SkylineMatrix, findnz
+using SkylineSolvers.Colsol: SkylineMatrix, findnz
 using SparseArrays
 function test()
     for s in [0.5, 0.2, 0.1, 0.05]
@@ -56,12 +70,12 @@ function test()
     true
 end
 end
-using .mbas004
-mbas004.test()
+using .mcolsol004
+mcolsol004.test()
 
-module mbas004a
+module mcolsol004a
 using Test
-using SkylineLDLT: SkylineMatrix, sparse
+using SkylineSolvers.Colsol: SkylineMatrix, sparse
 using SparseArrays
 function test()
     for s in [0.5, 0.2, 0.1, 0.05]
@@ -77,16 +91,16 @@ function test()
     true
 end
 end
-using .mbas004a
-mbas004a.test()
+using .mcolsol004a
+mcolsol004a.test()
 
-module mbas005
+module mcolsol005
 using Test
 using LinearAlgebra
-using SkylineLDLT: SkylineMatrix, ldlt_factorize!, ldlt_solve
+using SkylineSolvers.Colsol: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
-    A = [                                                                       
+    A = [   
       5.0 -4.0  1.0 0.0
      -4.0 6.0 -4.0 1.0
      1.0 -4.0 6.0 -4.0
@@ -95,7 +109,7 @@ function test()
     A = sparse(A)
     I, J, V = findnz(A)     
     sky = SkylineMatrix(I, J, V, size(A, 1))
-    ldlt_factorize!(sky)
+    factorize!(sky)
     F = Matrix(sparse(sky; symm = false))
      D = tril(triu(F, 0), 0)
      Lt = triu(F, 1) + LinearAlgebra.I
@@ -103,13 +117,13 @@ function test()
     true
 end
 end
-using .mbas005
-mbas005.test()
+using .mcolsol005
+mcolsol005.test()
 
-module mbas005a
+module mcolsol005a
 using Test
 using LinearAlgebra
-using SkylineLDLT: SkylineMatrix, ldlt_factorize!, ldlt_solve
+using SkylineSolvers.Colsol: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     A = [
@@ -122,7 +136,7 @@ function test()
     A = sparse(A)
     I, J, V = findnz(A)     
     sky = SkylineMatrix(I, J, V, size(A, 1))
-    ldlt_factorize!(sky)
+    factorize!(sky)
     F = Matrix(sparse(sky; symm = false))
      D = tril(triu(F, 0), 0)
      Lt = triu(F, 1) + LinearAlgebra.I
@@ -130,13 +144,13 @@ function test()
     true
 end
 end
-using .mbas005a
-mbas005a.test()
+using .mcolsol005a
+mcolsol005a.test()
 
-module mbas005b
+module mcolsol005b
 using Test
 using LinearAlgebra
-using SkylineLDLT: SkylineMatrix, ldlt_factorize!, ldlt_solve
+using SkylineSolvers.Colsol: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     A = [
@@ -149,25 +163,25 @@ function test()
     A = sparse(A)
     I, J, V = findnz(A)     
     sky = SkylineMatrix(I, J, V, size(A, 1))
-    ldlt_factorize!(sky)
+    factorize!(sky)
     F = Matrix(sparse(sky; symm = false))
      D = tril(triu(F, 0), 0)
      Lt = triu(F, 1) + LinearAlgebra.I
      @test norm(Lt' * D * Lt -  A) < 1e-6 * norm(A)
      b = rand(size(A, 1))
-    x = ldlt_solve(sky, b)
+    x = solve(sky, b)
 @test norm(A \ b - x) / norm(x) < 1e-6
     true
 end
 end
-using .mbas005b
-mbas005b.test()
+using .mcolsol005b
+mcolsol005b.test()
 
 
-module mbas005c
+module mcolsol005c
 using Test
 using LinearAlgebra
-using SkylineLDLT: SkylineMatrix, ldlt_factorize!, ldlt_solve
+using SkylineSolvers.Colsol: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     for s in [0.5, 0.2, 0.1, 0.05]
@@ -176,15 +190,15 @@ function test()
             A = A + A' + LinearAlgebra.I
             I, J, V = findnz(A)     
             sky = SkylineMatrix(I, J, V, M)
-            ldlt_factorize!(sky)
+            factorize!(sky)
             b = rand(size(A, 1))
-            x = ldlt_solve(sky, b)
+            x = solve(sky, b)
             @test norm(A \ b - x) / norm(x) < 1e-6
         end
     end
     true
 end
 end
-using .mbas005c
-mbas005c.test()
+using .mcolsol005c
+mcolsol005c.test()
 

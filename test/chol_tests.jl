@@ -1,6 +1,6 @@
-module mbas001
+module mchol001
 using Test
-using SkylineLDLT: update_skyline!
+using SkylineSolvers.Chol.Chol: update_skyline!
 
 function test()
     dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
@@ -14,12 +14,12 @@ function test()
     true
 end
 end
-using .mbas001
-mbas001.test()
+using .mchol001
+mchol001.test()
 
-module mbas002
+module mchol002
 using Test
-using SkylineLDLT: update_skyline!, diagonal_addresses
+using SkylineSolvers.Chol: update_skyline!, diagonal_addresses
 
 function test()
     dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
@@ -35,12 +35,12 @@ function test()
     true
 end
 end
-using .mbas002
-mbas002.test()
+using .mchol002
+mchol002.test()
 
-module mbas004
+module mchol004
 using Test
-using SkylineLDLT: SkylineMatrix, findnz
+using SkylineSolvers.Chol: SkylineMatrix, findnz
 using SparseArrays
 function test()
     for M in 17:13:177
@@ -55,13 +55,13 @@ function test()
     true
 end
 end
-using .mbas004
-mbas004.test()
+using .mchol004
+mchol004.test()
 
-module mbas005
+module mchol005
 using Test
 using LinearAlgebra
-using SkylineLDLT: SkylineMatrix, cholesky_factorize!, cholesky_solve
+using SkylineSolvers.Chol: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     M = 8
@@ -78,19 +78,19 @@ function test()
      
         I, J, V = findnz(A)     
         sky = SkylineMatrix(I, J, V, M)
-        cholesky_factorize!(sky)
+        factorize!(sky)
         
     true
 end
 end
-using .mbas005
-mbas005.test()
+using .mchol005
+mchol005.test()
 
 
-module mbas006
+module mchol006
 using Test
 using LinearAlgebra
-using SkylineLDLT: SkylineMatrix, cholesky_factorize!, cholesky_solve
+using SkylineSolvers.Chol: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     for M in 17:13:177
@@ -99,13 +99,13 @@ function test()
         b = rand(M)
         I, J, V = findnz(A)     
         sky = SkylineMatrix(I, J, V, M)
-        cholesky_factorize!(sky)
-        x = cholesky_solve(sky, b)
+        factorize!(sky)
+        x = solve(sky, b)
         xt = A\b
         @test norm(x - xt) < 1e-6 * norm(xt)
     end
     true
 end
 end
-using .mbas006
-mbas006.test()
+using .mchol006
+mchol006.test()

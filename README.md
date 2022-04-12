@@ -1,1 +1,1 @@
-# SkylineLDLT.jl
+# SkylineSolvers.jl

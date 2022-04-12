@@ -1,4 +1,4 @@
-name = "SkylineLDLT"
+name = "SkylineSolvers"
 uuid = "cd81f4f7-d126-42dc-ae02-23abebb1f683"
 authors = ["Petr Krysl <pkrysl@ucsd.edu>"]
 version = "0.1.0"

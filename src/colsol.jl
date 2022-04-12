@@ -5,7 +5,12 @@ Skyline matrix storage of a symmetric matrix. L*D*L^T factorization and solution
 
 Version adapted from https://github.com/HaoguangYang/OpenSTAP
 """
+module Colsol
 
+import Base: size
+using LinearAlgebra
+import SparseArrays: findnz, nnz
+import SparseArrays: sparse
 
 struct SkylineMatrix{IT, T}
     dim::Int64
@@ -61,6 +66,8 @@ function diagonal_addresses(mht)
     return maxa
 end
 
+nnz(A::SkylineMatrix{IT, T}) where {IT, T} = A.maxa[end]-1
+
 idx(maxa, r, c) = maxa[c] + c - r
 
 function SkylineMatrix(I::Vector{IT}, J::Vector{IT}, V::Vector{T}, m) where {IT, T}
@@ -73,7 +80,7 @@ function SkylineMatrix(I::Vector{IT}, J::Vector{IT}, V::Vector{T}, m) where {IT,
         end
     end
     maxa = diagonal_addresses(mht)
-    coefficients = fill(zero(T), maxa[end])
+    coefficients = fill(zero(T), maxa[end]-1)
     for i in 1:length(I)
         r = I[i]; c = J[i]
         if r != 0 && c != 0
@@ -117,35 +124,13 @@ function sparse(sky::SkylineMatrix{IT, T}; symm = true) where {IT, T}
     return sparse(I, J, V, M, M)
 end
 
-    # A = [                                                                       
-    #   2.50000e+00  -1.48222e-02  -6.84521e-02  -6.15827e-02
-    #  -1.48222e-02   2.38645e+00  -8.83376e-02   0.00000e+00
-    #  -6.84521e-02  -8.83376e-02   2.50000e+00  -4.13988e-02
-    #  -6.15827e-02   0.00000e+00  -4.13988e-02   2.50000e+00 
-    # ]
-
-    # A = [                                                                       
-    #   5.0 -4.0  1.0 0.0
-    #  -4.0 6.0 -4.0 1.0
-    #  1.0 -4.0 6.0 -4.0
-    #  0.0 1.0 -4.0 5.0
-    # ]
-
-    # A = [
-    # 2.0 -2.0 0.0 0.0 -1.0
-    # -2.0 3.0 -2.0 0.0 0.0
-    # 0.0 -2.0 5.0 -3.0 0.0
-    # 0.0 0.0 -3.0 10.0 4.0
-    # -1.0 0.0 0.0 4.0 10.0
-    # ]
-
 function print_matrix(A)
     for k in 1:size(A, 1)
         println(A[k,:])
     end
 end
 
-function _inner_ldlt_factorize!(M, a, maxa)
+function _inner_factorize!(M, a, maxa)
     nn=length(maxa) - 1
     for n=1:nn
         kn=maxa[n]
@@ -190,8 +175,8 @@ function _inner_ldlt_factorize!(M, a, maxa)
     end
 end
 
-function ldlt_factorize!(sky::MT) where {MT<:SkylineMatrix}
-    _inner_ldlt_factorize!(sky.dim, sky.coefficients, sky.maxa)
+function factorize!(sky::MT) where {MT<:SkylineMatrix}
+    _inner_factorize!(sky.dim, sky.coefficients, sky.maxa)
 end
 
 function _inner_ldlt_solve(dim, a, maxa, v)
@@ -233,9 +218,10 @@ function _inner_ldlt_solve(dim, a, maxa, v)
 end
 
  
-function ldlt_solve(sky::MT, rhs) where {MT<:SkylineMatrix}
+function solve(sky::MT, rhs) where {MT<:SkylineMatrix}
     x = fill(0.0, length(rhs))
     x .= rhs
     return _inner_ldlt_solve(sky.dim, sky.coefficients, sky.maxa, x)
 end
 
+end # module

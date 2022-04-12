@@ -1,7 +1,8 @@
 using LinearAlgebra
 using LinearAlgebra
-using SkylineLDLT
-using SkylineLDLT: SkylineMatrix, ldlt_factorize!, ldlt_solve
+using SkylineSolvers.Chol
+using SkylineSolvers.Colsol
+using SkylineSolvers.Ldlt
 using SymRCM
 using SparseArrays
 using DataDrop
@@ -11,12 +12,21 @@ using ProfileView
 K = DataDrop.retrieve_matrix("K.h5")
 @show size(K)
 I, J, V = findnz(K)     
-sky = SkylineMatrix(I, J, V, size(K, 1))
-@time SkylineLDLT.ldlt_factorize!(sky)
-sky = SkylineMatrix(I, J, Float32.(V), size(K, 1))
-@time SkylineLDLT.ldlt_factorize!(sky)
+
+sky = Chol.SkylineMatrix(I, J, V, size(K, 1))
+@show Chol.nnz(sky)
+@time Chol.factorize!(sky)
+
+sky = Colsol.SkylineMatrix(I, J, V, size(K, 1))
+@show Colsol.nnz(sky)
+@time Colsol.factorize!(sky)
+
+sky = Ldlt.SkylineMatrix(I, J, V, size(K, 1))
+@show Ldlt.nnz(sky)
+@time Ldlt.factorize!(sky)
+
 # sky = SkylineMatrix(I, J, V, size(K, 1))
-# @profview SkylineLDLT.ldlt_factorize!(sky)
+# @profview SkylineSolvers.ldlt_factorize!(sky)
 # b = rand(size(A, 1))
 # x = ldlt_solve(sky, b)
 # @test norm(A \ b - x) / norm(x) < 1e-6
