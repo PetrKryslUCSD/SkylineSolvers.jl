@@ -151,16 +151,16 @@ function dense_ldlt!(F)
     F
 end
 
-function _inner_factorize!(M, F, das, fr)
+function _inner_factorize!(M, F, das)
     for j in 2:M
         js = _cs(das, j)
-        frj = fr[j]
+        frj = firstr(das, j)
         @inbounds for i in 1:j-1
-            mij = max(fr[i], frj)
-            if mij <= i-1
+            fri = firstr(das, i)
+            frij = max(fri, frj)
+            if frij <= i-1
                 is = _cs(das, i)
-                r = mij:i-1
-                F[li(i, js)] -= @views dot(F[li(r, is)], F[li(r, js)])
+                F[li(i, js)] -= @views dot(F[li(frij:i-1, is)], F[li(frij:i-1, js)])
             end
         end
         s = F[li(j, js)]
@@ -175,14 +175,7 @@ function _inner_factorize!(M, F, das, fr)
 end
 
 function factorize!(A::MT) where {MT<:SkylineMatrix}
-    V = A.coefficients
-    das = A.das
-    fr = Array{eltype(das), 1}(undef, A.dim)
-    fr[1] = 1
-    for i in 2:A.dim
-        fr[i] = firstr(das, i)
-    end
-    _inner_factorize!(A.dim, V, das, fr)
+    _inner_factorize!(A.dim, A.coefficients, A.das)
 end
  
 function solve(A::MT, rhs) where {MT<:SkylineMatrix}
