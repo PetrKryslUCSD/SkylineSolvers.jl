@@ -66,8 +66,8 @@ firstr(sky, c) = c - (sky.frli[c+1] - sky.frli[c]) + 1
 Base.IndexStyle(::Type{<:SkylineMatrix}) = IndexLinear()
 Base.size(sky::SkylineMatrix) = (sky.dim, sky.dim)
 Base.size(sky::SkylineMatrix, which) = size(sky)[which]
-Base.getindex(sky::SkylineMatrix, r::Int, c::Int) = _cs(sky.frli, c) + r
-Base.getindex(sky::SkylineMatrix, r::UnitRange{IT}, c::IT) where {IT} =  _cs(sky.frli, c) .+ r
+Base.getindex(sky::SkylineMatrix, r::Int, c::Int) = sky.coefficients[_cs(sky.frli, c) + r]
+Base.getindex(sky::SkylineMatrix, r::UnitRange{IT}, c::IT) where {IT} =  @views sky.coefficients[_cs(sky.frli, c) .+ r]
 Base.setindex!(sky::SkylineMatrix, v, r::Int, c::Int) = (sky.coefficients[_cs(sky.frli, c) + r] = v)
 
 function SkylineMatrix(I::Vector{IT}, J::Vector{IT}, V::Vector{T}, m) where {IT, T}
@@ -141,9 +141,9 @@ function dense_ldlt!(F)
 end
 
 function factorize!(F::MT) where {MT<:SkylineMatrix}
-    for j in 2:size(F, 1)
+    for j in 2:size(F, 2)
         frj = firstr(F, j)
-        @inbounds for i in 1:j-1
+        for i in 1:j-1
             frij = max(firstr(F, i), frj)
             if frij <= i-1
                 F[i, j] -= @views dot(F[frij:i-1, i], F[frij:i-1, j])
@@ -159,10 +159,8 @@ function factorize!(F::MT) where {MT<:SkylineMatrix}
     end
 end
  
-function solve(A::MT, rhs) where {MT<:SkylineMatrix}
-    F = A.coefficients
-    frli = A.frli
-    M = A.dim
+function solve(F::MT, rhs) where {MT<:SkylineMatrix}
+    M = size(F, 1)
     x = fill(0.0, length(rhs))
     # Solve L * z = b
     b = deepcopy(rhs)
@@ -170,22 +168,22 @@ function solve(A::MT, rhs) where {MT<:SkylineMatrix}
     z[1] = b[1]
     for j in 2:M
         s = 0.0
-        for k in firstr(frli, j):j-1
-            s += F[idx(frli, k, j)] * z[k]
+        for k in firstr(F, j):j-1
+            s += F[k, j] * z[k]
         end
         z[j] = (b[j] - s)
     end
     # Solve L' * x = D^-1 * z
     for j in 1:M
-        z[j] /= F[idx(frli, j, j)]
+        z[j] /= F[j, j]
     end
     x[M] = z[M]
     for j in M-1:-1:1
         s = 0.0
         for k in j+1:M 
-            r = firstr(frli, k)
+            r = firstr(F, k)
             if j >= r
-                s += F[idx(frli, j, k)] * x[k]
+                s += F[j, k] * x[k]
             end
         end
         x[j] = (z[j] - s) 

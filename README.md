@@ -35,8 +35,9 @@ are no functions to extract the individual factors.
   matrix is actually stored.
 - The module `Chol` defines a Cholesky decomposition and triangular solve.
 - The modules `Ldlt`, `Ldlt2`, `Ldlt3` define a LDLT decomposition and
-  triangular solve each. The module `Ldlt3` is most pleasing aesthetically, but
-  it is clearly the slowest. `Ldlt`, `Ldlt2` are roughly equally fast.
+  triangular solve each. `Ldlt`, `Ldlt2` are roughly equally fast.
+- The module `Ldlt3` is most pleasing aesthetically: the sparse solver looks
+  almost identical to the dense-matrix solver. 
 - The module `Colsol` defines the original skyline solution from the textbook of
   KJ Bathe. It is clearly around three times slower then  `Ldlt` or `Ldlt2`.
 - No renumbering is undertaken in order to minimize the number of entries stored

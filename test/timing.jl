@@ -8,12 +8,16 @@ using DataDrop
 using Profile
 using ProfileView
 
-K = DataDrop.retrieve_matrix("K.h5")
+K = DataDrop.retrieve_matrix("K63070.h5")
+# K = DataDrop.retrieve_matrix("K28782.h5")
 @show size(K)
 I, J, V = findnz(K)     
 
 @time LDLFactorizations.ldl(K)
-@time LDLFactorizations.ldl(K)
+
+sky = SkylineSolvers.Ldlt4.SkylineMatrix(I, J, V, size(K, 1))
+@show SkylineSolvers.Ldlt4.nnz(sky)
+@time SkylineSolvers.Ldlt4.factorize!(sky)
 
 sky = SkylineSolvers.Ldlt3.SkylineMatrix(I, J, V, size(K, 1))
 @show SkylineSolvers.Ldlt3.nnz(sky)

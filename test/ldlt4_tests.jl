@@ -1,43 +1,6 @@
-
-module mldlt3005
+module mldlt4001
 using Test
-using LinearAlgebra
-using SkylineSolvers.Ldlt3: SkylineMatrix, factorize!, solve
-using SparseArrays
-function test()
-    A = [        
-      5.0 -4.0  1.0 0.0
-     -4.0 6.0 -4.0 1.0
-     1.0 -4.0 6.0 -4.0
-     0.0 1.0 -4.0 5.0
-    ]
-    D =  [5.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
-     0.00000e+00  2.80000e+00  0.00000e+00  0.00000e+00
-     0.00000e+00  0.00000e+00  2.14286e+00  0.00000e+00
-     0.00000e+00  0.00000e+00  0.00000e+00  8.33333e-01]
-              
-    Lt = [1.00000e+00  -8.00000e-01   2.00000e-01   0.00000e+00
-     0.00000e+00   1.00000e+00  -1.14286e+00   3.57143e-01
-     0.00000e+00   0.00000e+00   1.00000e+00  -1.33333e+00
-     0.00000e+00   0.00000e+00   0.00000e+00   1.00000e+00  ]
-    A = sparse(A)
-    I, J, V = findnz(A)     
-    @show sky = SkylineMatrix(I, J, V, size(A, 1))
-    factorize!(sky)
-    @show sky
-    F = Matrix(sparse(sky; symm = false))
-     @show D = tril(triu(F, 0), 0)
-     @show Lt = triu(F, 1) + LinearAlgebra.I
-     @test norm(Lt' * D * Lt -  A) < 1e-6 * norm(A)
-    true
-end
-end
-using .mldlt3005
-mldlt3005.test()
-
-module mldlt3001
-using Test
-using SkylineSolvers.Ldlt3: update_skyline!
+using SkylineSolvers.Ldlt4: update_skyline!
 
 function test()
     dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
@@ -51,12 +14,12 @@ function test()
     true
 end
 end
-using .mldlt3001
-mldlt3001.test()
+using .mldlt4001
+mldlt4001.test()
 
-module mldlt3002
+module mldlt4002
 using Test
-using SkylineSolvers.Ldlt3: update_skyline!, diagonal_addresses
+using SkylineSolvers.Ldlt4: update_skyline!, diagonal_addresses
 function test()
     dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
     bars = [1 2; 1 6; 6 5; 5 2; 6 2; 2 3; 3 4; 2 4]
@@ -71,12 +34,12 @@ function test()
     true
 end
 end
-using .mldlt3002
-mldlt3002.test()
+using .mldlt4002
+mldlt4002.test()
 
-module mldlt3004
+module mldlt4004
 using Test
-using SkylineSolvers.Ldlt3: SkylineMatrix, findnz
+using SkylineSolvers.Ldlt4: SkylineMatrix, findnz
 using SparseArrays
 function test()
     for s in [0.5, 0.2, 0.1, 0.05]
@@ -93,12 +56,12 @@ function test()
     true
 end
 end
-using .mldlt3004
-mldlt3004.test()
+using .mldlt4004
+mldlt4004.test()
 
-module mldlt3004a
+module mldlt4004a
 using Test
-using SkylineSolvers.Ldlt3: SkylineMatrix, sparse
+using SkylineSolvers.Ldlt4: SkylineMatrix, sparse
 using SparseArrays
 function test()
     for s in [0.5, 0.2, 0.1, 0.05]
@@ -114,13 +77,39 @@ function test()
     true
 end
 end
-using .mldlt3004a
-mldlt3004a.test()
+using .mldlt4004a
+mldlt4004a.test()
 
-module mldlt3005a
+module mldlt4005
 using Test
 using LinearAlgebra
-using SkylineSolvers.Ldlt3: SkylineMatrix, factorize!, solve
+using SkylineSolvers.Ldlt4: SkylineMatrix, factorize!, solve
+using SparseArrays
+function test()
+    A = [                                                                       
+      5.0 -4.0  1.0 0.0
+     -4.0 6.0 -4.0 1.0
+     1.0 -4.0 6.0 -4.0
+     0.0 1.0 -4.0 5.0
+    ]
+    A = sparse(A)
+    I, J, V = findnz(A)     
+    sky = SkylineMatrix(I, J, V, size(A, 1))
+    factorize!(sky)
+    F = Matrix(sparse(sky; symm = false))
+     D = tril(triu(F, 0), 0)
+     Lt = triu(F, 1) + LinearAlgebra.I
+     @test norm(Lt' * D * Lt -  A) < 1e-6 * norm(A)
+    true
+end
+end
+using .mldlt4005
+mldlt4005.test()
+
+module mldlt4005a
+using Test
+using LinearAlgebra
+using SkylineSolvers.Ldlt4: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     A = [
@@ -141,13 +130,13 @@ function test()
     true
 end
 end
-using .mldlt3005a
-mldlt3005a.test()
+using .mldlt4005a
+mldlt4005a.test()
 
-module mldlt3005b
+module mldlt4005b
 using Test
 using LinearAlgebra
-using SkylineSolvers.Ldlt3: SkylineMatrix, factorize!, solve
+using SkylineSolvers.Ldlt4: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     A = [
@@ -171,14 +160,14 @@ function test()
     true
 end
 end
-using .mldlt3005b
-mldlt3005b.test()
+using .mldlt4005b
+mldlt4005b.test()
 
 
-module mldlt3005c
+module mldlt4005c
 using Test
 using LinearAlgebra
-using SkylineSolvers.Ldlt3: SkylineMatrix, factorize!, solve
+using SkylineSolvers.Ldlt4: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     for s in [0.5, 0.2, 0.1, 0.05]
@@ -196,6 +185,6 @@ function test()
     true
 end
 end
-using .mldlt3005c
-mldlt3005c.test()
+using .mldlt4005c
+mldlt4005c.test()
 
