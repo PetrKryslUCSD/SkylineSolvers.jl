@@ -40,5 +40,6 @@ are no functions to extract the individual factors.
 - The module `Colsol` defines the original skyline solution from the textbook of
   KJ Bathe. It is clearly around three times slower then  `Ldlt` or `Ldlt2`.
 - No renumbering is undertaken in order to minimize the number of entries store
-  below the skyline. If the matrix is numbered in an unfortunate way, used the
-  package `SymRCM` to reorder the matrix first.
+  below the skyline. If the matrix is numbered in an unfortunate way, use the
+  package [`SymRCM`](https://github.com/PetrKryslUCSD/SymRCM.jl) to reorder the
+  matrix first.
