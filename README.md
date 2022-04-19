@@ -16,7 +16,7 @@ sky = SkylineSolvers.Ldlt2.SkylineMatrix(I, J, V, size(K, 1))
 
 The two main operations are "factorize" and "solve":
 ```
-SkylineSolvers.Ldlt2.Factorize!(sky)
+SkylineSolvers.Ldlt2.factorize!(sky)
 b = rand(size(A, 1))
 x = SkylineSolvers.Ldlt2.solve(sky, b)
 @test norm(A \ b - x) / norm(x) < 1e-6
