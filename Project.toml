@@ -5,6 +5,7 @@ version = "0.1.0"
 
 [deps]
 DataDrop = "aa547a04-dd37-49ab-8e73-656744f8a8fc"
+LDLFactorizations = "40e66cde-538c-5869-a4ad-c39174c6795b"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Profile = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 ProfileView = "c46f51b8-102a-5cf2-8d2c-8597cb0e0da7"
