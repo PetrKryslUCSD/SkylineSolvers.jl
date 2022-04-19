@@ -39,7 +39,10 @@ are no functions to extract the individual factors.
   it is clearly the slowest. `Ldlt`, `Ldlt2` are roughly equally fast.
 - The module `Colsol` defines the original skyline solution from the textbook of
   KJ Bathe. It is clearly around three times slower then  `Ldlt` or `Ldlt2`.
-- No renumbering is undertaken in order to minimize the number of entries store
+- No renumbering is undertaken in order to minimize the number of entries stored
   below the skyline. If the matrix is numbered in an unfortunate way, use the
   package [`SymRCM`](https://github.com/PetrKryslUCSD/SymRCM.jl) to reorder the
   matrix first.
+- The solvers in this package are many times slower than the SuiteSparse
+  Cholesky supernodal solver. However, they should be able to take as inputs
+  arbitrary integers and floating point numbers. 
