@@ -1,3 +1,39 @@
+
+module mcolsol3005a
+using Test
+using LinearAlgebra
+using SkylineSolvers.Colsol: SkylineMatrix, factorize!, solve
+using SparseArrays
+function test()
+    A = [        
+    5.0 -4.0  1.0 0.0
+    -4.0 6.0 -4.0 1.0
+    1.0 -4.0 6.0 -4.0
+    0.0 1.0 -4.0 5.0
+    ]
+    D =  [5.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+    0.00000e+00  2.80000e+00  0.00000e+00  0.00000e+00
+    0.00000e+00  0.00000e+00  2.14286e+00  0.00000e+00
+    0.00000e+00  0.00000e+00  0.00000e+00  8.33333e-01]
+
+    Lt = [1.00000e+00  -8.00000e-01   2.00000e-01   0.00000e+00
+    0.00000e+00   1.00000e+00  -1.14286e+00   3.57143e-01
+    0.00000e+00   0.00000e+00   1.00000e+00  -1.33333e+00
+    0.00000e+00   0.00000e+00   0.00000e+00   1.00000e+00  ]
+    A = sparse(A)
+    I, J, V = findnz(A)     
+    sky = SkylineMatrix(I, J, V, size(A, 1))
+    factorize!(sky)
+    F = Matrix(sparse(sky; symm = false))
+    D = tril(triu(F, 0), 0)
+    Lt = triu(F, 1) + LinearAlgebra.I
+    @test norm(Lt' * D * Lt -  A) < 1e-6 * norm(A)
+    true
+end
+end
+using .mcolsol3005a
+mcolsol3005a.test()
+
 module mcolsol001
 using Test
 using SkylineSolvers.Colsol: update_skyline!

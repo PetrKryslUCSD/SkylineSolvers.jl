@@ -3,6 +3,8 @@
 
 Skyline matrix storage of a symmetric matrix. L*D*L^T factorization and solution.
 
+A rewrite of the original code by Bathe.
+
 Version adapted from https://github.com/HaoguangYang/OpenSTAP
 """
 module Colsol
@@ -131,43 +133,44 @@ function print_matrix(A)
 end
 
 function _inner_factorize!(M, a, maxa)
-    nn=length(maxa) - 1
-    for n=1:nn
-        kn=maxa[n]
-        kl=kn + 1
-        ku=maxa[n+1] - 1
-        kh=ku - kl
+    nn = length(maxa) - 1
+    for n in 1:nn
+        kn = maxa[n]
+        kl = kn + 1
+        ku = maxa[n+1] - 1
+        kh = ku - kl
         if (kh > 0) 
-            k=n - kh
-            ic=0
-            klt=ku
-            for j=1:kh
-                ic=ic + 1
-                klt=klt - 1
-                ki=maxa[k]
-                nd=maxa[k+1] - ki - 1
+            k = n - kh
+            ic = 0
+            klt = ku
+            for j in 1:kh
+                ic = ic + 1
+                klt = klt - 1
+                ki = maxa[k]
+                nd = maxa[k+1] - ki - 1
                 if (nd  > 0) 
-                    kk=min(ic,nd)
-                    c=0.
-                    for l=1:kk
-                        c=c + a[ki+l]*a[klt+l]
-                    end
-                    a[klt]=a[klt] - c
+                    kk = min(ic,nd)
+                    # c = 0.
+                    # for l in 1:kk
+                    #     c = c + a[ki+l]*a[klt+l]
+                    # end
+                    # a[klt] = a[klt] - c
+                    a[klt] -= @views dot(a[ki .+ (1:kk)], a[klt .+ (1:kk)])
                 end 
-                k=k + 1
+                k = k + 1
             end
         end
         if (kh >= 0) 
-            k=n
-            b=0.0
-            for kk=kl:ku
-                k=k - 1
-                ki=maxa[k]
-                c=a[kk]/a[ki]
-                b=b + c*a[kk]
-                a[kk]=c
+            k = n
+            b = 0.0
+            for kk in kl:ku
+                k = k - 1
+                ki = maxa[k]
+                c = a[kk]/a[ki]
+                b = b + c*a[kk]
+                a[kk] = c
             end
-            a[kn]=a[kn] - b
+            a[kn] = a[kn] - b
         end
         if (a[kn] == 0) 
             @error "Zero Pivot"
@@ -177,6 +180,7 @@ end
 
 function factorize!(sky::MT) where {MT<:SkylineMatrix}
     _inner_factorize!(sky.dim, sky.coefficients, sky.maxa)
+    return sky
 end
 
 function _inner_ldlt_solve(dim, a, maxa, v)
