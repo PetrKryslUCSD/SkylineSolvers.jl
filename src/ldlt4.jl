@@ -69,7 +69,7 @@ Base.IndexStyle(::Type{<:SkylineMatrix}) = IndexLinear()
 Base.size(sky::SkylineMatrix) = (sky.dim, sky.dim)
 Base.size(sky::SkylineMatrix, which) = size(sky)[which]
 Base.getindex(sky::SkylineMatrix, r::Int, cs::Int) = sky.coefficients[cs + r]
-Base.getindex(sky::SkylineMatrix, r::UnitRange{IT}, cs::IT) where {IT} =  @views sky.coefficients[cs .+ r]
+Base.getindex(sky::SkylineMatrix, r::UnitRange{IT}, cs::IT) where {IT} =  @views sky.coefficients[cs .+ (r)]
 Base.setindex!(sky::SkylineMatrix, v, r::Int, cs::Int) = (sky.coefficients[cs + r] = v)
 
 function SkylineMatrix(I::Vector{IT}, J::Vector{IT}, V::Vector{T}, m) where {IT, T}
