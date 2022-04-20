@@ -39,7 +39,7 @@ are no functions to extract the individual factors.
 - The module `Ldlt3` is most pleasing aesthetically: the sparse solver looks
   almost identical to the dense-matrix solver. 
 - The module `Colsol` defines the original skyline solution from the textbook of
-  KJ Bathe. It is clearly around three times slower then  `Ldlt` or `Ldlt2`.
+  KJ Bathe. 
 - No renumbering is undertaken in order to minimize the number of entries stored
   below the skyline. If the matrix is numbered in an unfortunate way, use the
   package [`SymRCM`](https://github.com/PetrKryslUCSD/SymRCM.jl) to reorder the
