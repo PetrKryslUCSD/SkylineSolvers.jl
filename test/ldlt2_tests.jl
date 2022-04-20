@@ -6,19 +6,19 @@ using SkylineSolvers.Ldlt2: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     A = [                                                                       
-      5.0 -4.0  1.0 0.0
-     -4.0 6.0 -4.0 1.0
-     1.0 -4.0 6.0 -4.0
-     0.0 1.0 -4.0 5.0
+    5.0 -4.0  1.0 0.0
+    -4.0 6.0 -4.0 1.0
+    1.0 -4.0 6.0 -4.0
+    0.0 1.0 -4.0 5.0
     ]
     A = sparse(A)
     I, J, V = findnz(A)     
     sky = SkylineMatrix(I, J, V, size(A, 1))
     factorize!(sky)
     F = Matrix(sparse(sky; symm = false))
-    @show D = tril(triu(F, 0), 0)
-    @show Lt = triu(F, 1) + LinearAlgebra.I
-     @test norm(Lt' * D * Lt -  A) < 1e-6 * norm(A)
+    D = tril(triu(F, 0), 0)
+    Lt = triu(F, 1) + LinearAlgebra.I
+    @test norm(Lt' * D * Lt -  A) < 1e-6 * norm(A)
     true
 end
 end
