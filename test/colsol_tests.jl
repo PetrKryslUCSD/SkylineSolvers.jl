@@ -36,14 +36,14 @@ mcolsol3005a.test()
 
 module mcolsol001
 using Test
-using SkylineSolvers.Colsol: update_skyline!
+using SkylineSolvers.Colsol: _update_skyline!
 
 function test()
     dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
     bars = [1 2; 1 6; 6 5; 5 2; 6 2; 2 3; 3 4; 2 4]
     mht = fill(0, maximum(dofnums[:]))
     for b in 1:size(bars, 1)
-        update_skyline!(mht, [d for d in dofnums[bars[b, :], :]])
+        _update_skyline!(mht, [d for d in dofnums[bars[b, :], :]])
     end
     # @show mht
     @test mht == [0, 1, 2, 3, 4, 5, 6, 7, 2, 3, 4, 5]
@@ -55,11 +55,11 @@ mcolsol001.test()
 
 module mcolsol003
 using Test
-using SkylineSolvers.Colsol: update_skyline!, diagonal_addresses
+using SkylineSolvers.Colsol: _update_skyline!, _diagonal_addresses
 function test()
     # Example From Section 12.2 of Bathe Finite Element Procedures (1997)
     mht = [0, 1, 1, 3, 1, 3, 1, 3]
-    maxa = diagonal_addresses(mht)
+    maxa = _diagonal_addresses(mht)
     @test maxa == [1, 2, 4, 6, 10, 12, 16, 18, 22]
     true
 end
@@ -69,17 +69,17 @@ mcolsol003.test()
 
 module mcolsol002
 using Test
-using SkylineSolvers.Colsol: update_skyline!, diagonal_addresses
+using SkylineSolvers.Colsol: _update_skyline!, _diagonal_addresses
 function test()
     dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
     bars = [1 2; 1 6; 6 5; 5 2; 6 2; 2 3; 3 4; 2 4]
     mht = fill(0, maximum(dofnums[:]))
     for b in 1:size(bars, 1)
-        update_skyline!(mht, [d for d in dofnums[bars[b, :], :]])
+        _update_skyline!(mht, [d for d in dofnums[bars[b, :], :]])
     end
     # @show mht
     @test mht == [0, 1, 2, 3, 4, 5, 6, 7, 2, 3, 4, 5]
-    maxa = diagonal_addresses(mht)
+    maxa = _diagonal_addresses(mht)
     @test maxa == [1, 2, 4, 7, 11, 16, 22, 29, 37, 40, 44, 49, 55] 
     true
 end

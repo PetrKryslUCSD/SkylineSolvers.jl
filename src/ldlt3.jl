@@ -34,7 +34,7 @@ function SkylineMatrix(frli::Vector{IT}, z = zero(T)) where {IT, T}
     return SkylineMatrix(dim, frli, coefficients)
 end
 
-function update_skyline!(column_heights, dofnums)
+function _update_skyline!(column_heights, dofnums)
     minr = minimum(dofnums)
     for c in dofnums
         h = c - minr + 1
@@ -45,7 +45,7 @@ function update_skyline!(column_heights, dofnums)
     return column_heights
 end
 
-function diagonal_addresses(column_heights)
+function _diagonal_addresses(column_heights)
     d = fill(0, length(column_heights))
     d .= column_heights
     d[1] = 1
@@ -58,10 +58,8 @@ end
 nnz(A::SkylineMatrix{IT, T}) where {IT, T} = A.frli[end] - 1
 
 _cs(frli, c) = frli[c+1] - c - 1
-idx(frli, r, c) = _cs(frli, c) + r
-li(r, cs) = cs + r
-li(r::UnitRange{Int64}, cs) = cs .+ r
-firstr(sky, c) = c - (sky.frli[c+1] - sky.frli[c]) + 1 
+_li(r, cs) = cs + r
+_1strowincol(sky, c) = c - (sky.frli[c+1] - sky.frli[c]) + 1 
 
 Base.IndexStyle(::Type{<:SkylineMatrix}) = IndexLinear()
 Base.size(sky::SkylineMatrix) = (sky.dim, sky.dim)
@@ -76,17 +74,17 @@ function SkylineMatrix(I::Vector{IT}, J::Vector{IT}, V::Vector{T}, m) where {IT,
     for i in 1:length(I)
         r = I[i]; c = J[i]
         if r != 0 && c != 0
-            update_skyline!(column_heights, (r, c))
+            _update_skyline!(column_heights, (r, c))
         end
     end
-    frli = vcat([1], diagonal_addresses(column_heights) .+ 1)
+    frli = vcat([1], _diagonal_addresses(column_heights) .+ 1)
     coefficients = fill(zero(T), frli[end]-1)
     for i in 1:length(I)
         r = I[i]; c = J[i]
         if r != 0 && c != 0
             if c >= r
                 cs = _cs(frli, c)
-                coefficients[li(r, cs)] += V[i] 
+                coefficients[_li(r, cs)] += V[i] 
             end
         end
     end
@@ -100,16 +98,16 @@ function findnz(sky::SkylineMatrix{IT, T}; symm = true) where {IT, T}
     J = IT[]
     V = T[]
     for c in 1:sky.dim
-        for r in firstr(sky, c):c
-            lk = idx(frli, r, c)
-            if sky.coefficients[lk] != zero(T) 
+        for r in _1strowincol(sky, c):c
+            v = sky[r, c]
+            if v != zero(T) 
                 push!(I, r)
                 push!(J, c)
-                push!(V, sky.coefficients[lk])
+                push!(V, v)
                 if r != c && symm
                     push!(I, c)
                     push!(J, r)
-                    push!(V, sky.coefficients[lk])
+                    push!(V, v)
                 end
             end
         end
@@ -142,9 +140,9 @@ end
 
 function factorize!(F::MT) where {MT<:SkylineMatrix}
     for j in 2:size(F, 2)
-        frj = firstr(F, j)
+        frj = _1strowincol(F, j)
         for i in 1:j-1
-            frij = max(firstr(F, i), frj)
+            frij = max(_1strowincol(F, i), frj)
             if frij <= i-1
                 F[i, j] -= @views dot(F[frij:i-1, i], F[frij:i-1, j])
             end
@@ -168,7 +166,7 @@ function solve(F::MT, rhs) where {MT<:SkylineMatrix}
     z[1] = b[1]
     for j in 2:M
         s = 0.0
-        for k in firstr(F, j):j-1
+        for k in _1strowincol(F, j):j-1
             s += F[k, j] * z[k]
         end
         z[j] = (b[j] - s)
@@ -181,7 +179,7 @@ function solve(F::MT, rhs) where {MT<:SkylineMatrix}
     for j in M-1:-1:1
         s = 0.0
         for k in j+1:M 
-            r = firstr(F, k)
+            r = _1strowincol(F, k)
             if j >= r
                 s += F[j, k] * x[k]
             end

@@ -29,7 +29,7 @@ function SkylineMatrix(maxa::Vector{IT}, z = zero(T)) where {IT, T}
     return SkylineMatrix(dim, maxa, coefficients)
 end
 
-function update_skyline!(mht, lm)
+function _update_skyline!(mht, lm)
     nd = length(lm)
     ls=typemax(eltype(mht)) 
     for i=1:nd
@@ -50,7 +50,7 @@ function update_skyline!(mht, lm)
     end 
 end
 
-function diagonal_addresses(mht)
+function _diagonal_addresses(mht)
     neq = length(mht)
     nn=neq + 1
     maxa = fill(0, nn)
@@ -78,10 +78,10 @@ function SkylineMatrix(I::Vector{IT}, J::Vector{IT}, V::Vector{T}, m) where {IT,
     for i in 1:length(I)
         r = I[i]; c = J[i]
         if r != 0 && c != 0
-            update_skyline!(mht, (r, c))
+            _update_skyline!(mht, (r, c))
         end
     end
-    maxa = diagonal_addresses(mht)
+    maxa = _diagonal_addresses(mht)
     coefficients = fill(zero(T), maxa[end]-1)
     for i in 1:length(I)
         r = I[i]; c = J[i]

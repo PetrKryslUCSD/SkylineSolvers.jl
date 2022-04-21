@@ -11,7 +11,7 @@ struct SkylineMatrix{IT, T}
     coefficients::Vector{T}
 end
 
-function update_skyline!(skylngs, dofnums)
+function _update_skyline!(skylngs, dofnums)
     ndof = length(dofnums)
     for i in 1:ndof
         gi = dofnums[i]
@@ -34,7 +34,7 @@ function update_skyline!(skylngs, dofnums)
     return skylngs
 end
 
-function diagonal_addresses(skylngs)
+function _diagonal_addresses(skylngs)
     d = fill(0, length(skylngs))
     d .= skylngs
     for i in 2:length(d)
@@ -51,10 +51,10 @@ function SkylineMatrix(I::Vector{IT}, J::Vector{IT}, V::Vector{T}, m) where {IT,
     for i in 1:length(I)
         r = I[i]; c = J[i]
         if r != 0 && c != 0
-            update_skyline!(skylngs, (r, c))
+            _update_skyline!(skylngs, (r, c))
         end
     end
-    das = diagonal_addresses(skylngs)
+    das = _diagonal_addresses(skylngs)
     coefficients = fill(zero(T), das[end])
     for i in 1:length(I)
         r = I[i]; c = J[i]

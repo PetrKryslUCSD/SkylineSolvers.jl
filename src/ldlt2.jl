@@ -34,7 +34,7 @@ function SkylineMatrix(frli::Vector{IT}, z = zero(T)) where {IT, T}
     return SkylineMatrix(dim, frli, coefficients)
 end
 
-function update_skyline!(column_heights, dofnums)
+function _update_skyline!(column_heights, dofnums)
     minr = minimum(dofnums)
     for c in dofnums
         h = c - minr + 1
@@ -45,7 +45,7 @@ function update_skyline!(column_heights, dofnums)
     return column_heights
 end
 
-function diagonal_addresses(column_heights)
+function _diagonal_addresses(column_heights)
     d = fill(0, length(column_heights))
     d .= column_heights
     d[1] = 1
@@ -69,10 +69,10 @@ function SkylineMatrix(I::Vector{IT}, J::Vector{IT}, V::Vector{T}, m) where {IT,
     for i in 1:length(I)
         r = I[i]; c = J[i]
         if r != 0 && c != 0
-            update_skyline!(column_heights, (r, c))
+            _update_skyline!(column_heights, (r, c))
         end
     end
-    frli = vcat([1], diagonal_addresses(column_heights) .+ 1)
+    frli = vcat([1], _diagonal_addresses(column_heights) .+ 1)
     coefficients = fill(zero(T), frli[end]-1)
     for i in 1:length(I)
         r = I[i]; c = J[i]

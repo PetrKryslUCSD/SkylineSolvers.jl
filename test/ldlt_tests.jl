@@ -1,13 +1,13 @@
 module mldlt001
 using Test
-using SkylineSolvers.Ldlt: update_skyline!
+using SkylineSolvers.Ldlt: _update_skyline!
 
 function test()
     dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
     bars = [1 2; 1 6; 6 5; 5 2; 6 2; 2 3; 3 4; 2 4]
     skylngs = fill(0, maximum(dofnums[:]))
     for b in 1:size(bars, 1)
-        update_skyline!(skylngs, [d for d in dofnums[bars[b, :], :]])
+        _update_skyline!(skylngs, [d for d in dofnums[bars[b, :], :]])
     end
     # @show skylngs
     @test skylngs == [1, 2, 3, 4, 5, 6, 7, 8, 3, 4, 5, 6]
@@ -19,17 +19,17 @@ mldlt001.test()
 
 module mldlt002
 using Test
-using SkylineSolvers.Ldlt: update_skyline!, diagonal_addresses
+using SkylineSolvers.Ldlt: _update_skyline!, _diagonal_addresses
 function test()
     dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
     bars = [1 2; 1 6; 6 5; 5 2; 6 2; 2 3; 3 4; 2 4]
     skylngs = fill(0, maximum(dofnums[:]))
     for b in 1:size(bars, 1)
-        update_skyline!(skylngs, [d for d in dofnums[bars[b, :], :]])
+        _update_skyline!(skylngs, [d for d in dofnums[bars[b, :], :]])
     end
     # @show skylngs
     @test skylngs == [1, 2, 3, 4, 5, 6, 7, 8, 3, 4, 5, 6]
-    d = diagonal_addresses(skylngs)
+    d = _diagonal_addresses(skylngs)
     @test d == [1, 3, 6, 10, 15, 21, 28, 36, 39, 43, 48, 54]  
     true
 end
