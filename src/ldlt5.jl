@@ -3,31 +3,34 @@
 
 Skyline matrix storage of a symmetric matrix. L*D*L^T factorization and solution.
 
-Version 3 developed from scratch.
+Version 5 developed from scratch.
 
-The storage here is different from STAP. The numbers in each column are stored
-from the top row to the bottom. The addresses are for M+1 "first nonzero in a
-column".
+The entries are ordered column-by-column, from 
+    the first non zero entry in each column down to the diagonal.
+    This array records the linear index of the diagonal 
+    entry, `das[k]`, in a given column `k`. 
+    The `das[0]` address is for an dummy 0-th column.
 
 The indexing is developed to mimic dense-matrix addressing.
 """
 
-module Ldlt3
+module Ldlt5
 
 import Base
 using LinearAlgebra
 import SparseArrays: findnz, nnz
 import SparseArrays: sparse
+using OffsetArrays
 
 struct SkylineMatrix{IT, T}
     # Dimension of the square matrix
-    dim::Int64 
-    # The entries are ordered column-by-column, from the diagonal upwards.
+    dim::IT 
+    # The entries are ordered column-by-column, from 
+    # the first non zero entry in each column down to the diagonal.
     # This array records the linear index of the diagonal 
-    # entry in a given column. 
-    # The (dim+1) address is for an  extra column and gives 
-    # the (total number of stored entries + 1).
-    das::Vector{IT} 
+    # entry, `das[k]`, in a given column `k`. 
+    # The `das[0]` address is for an dummy 0-th column.
+    das::OffsetVector{IT, Vector{IT}}
     # Stored entries of the matrix
     coefficients::Vector{T} 
 end
@@ -44,17 +47,14 @@ function _update_skyline!(column_heights, dofnums)
 end
 
 function _diagonal_addresses(column_heights)
-    d = fill(0, length(column_heights)+1)
-    d[1] = 1
-    d[2:end] .= column_heights
-    return cumsum(d)
+    return OffsetArray(vcat([0], cumsum(column_heights)), 0:length(column_heights))
 end
 
-nnz(A::SkylineMatrix{IT, T}) where {IT, T} = A.das[end] - 1
+nnz(A::SkylineMatrix{IT, T}) where {IT, T} = A.das[end] 
 
-_cs(das, c) = das[c+1] - c - 1
 _li(r, cs) = cs + r
-_1strowincol(sky, c) = c - (sky.das[c+1] - sky.das[c]) + 1 
+_cs(das, c) = das[c] - c
+_1strowincol(sky, c) = c - (sky.das[c] - sky.das[c-1]) + 1 
 
 Base.IndexStyle(::Type{<:SkylineMatrix}) = IndexLinear()
 Base.size(sky::SkylineMatrix) = (sky.dim, sky.dim)
@@ -73,7 +73,7 @@ function SkylineMatrix(I::Vector{IT}, J::Vector{IT}, V::Vector{T}, m) where {IT,
         end
     end
     das = _diagonal_addresses(column_heights)
-    coefficients = fill(zero(T), das[end]-1)
+    coefficients = fill(zero(T), das[end])
     for i in 1:length(I)
         r = I[i]; c = J[i]
         if r != 0 && c != 0
@@ -134,7 +134,7 @@ end
 function factorize!(F::MT) where {MT<:SkylineMatrix}
     for j in 2:size(F, 2)
         frj = _1strowincol(F, j)
-        for i in 1:j-1
+        for i in frj:j-1
             frij = max(_1strowincol(F, i), frj)
             if frij <= i-1
                 F[i, j] -= @views dot(F[frij:i-1, i], F[frij:i-1, j])

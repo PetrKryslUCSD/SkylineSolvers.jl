@@ -3,7 +3,7 @@
 
 Skyline matrix storage of a symmetric matrix. L*D*L^T factorization and solution.
 
-Version 3 developed from scratch.
+Version 4 developed from scratch.
 
 The storage here is different from STAP. The numbers in each column are stored
 from the top row to the bottom. The addresses are for M+1 "first nonzero in a

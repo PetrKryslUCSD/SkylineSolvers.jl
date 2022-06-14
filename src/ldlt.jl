@@ -3,32 +3,36 @@
 
 Skyline matrix storage of a symmetric matrix. L*D*L^T factorization and solution.
 
-Version developed from scratch.
+Version 5 developed from scratch.
 
-The storage here is different from STAP. The numbers in each column are stored
-from the top row to the bottom. The diagonal addresses are only for the M
-columns (not for M+1 addresses as in STAP).
+The entries are ordered column-by-column, from 
+    the first non zero entry in each column down to the diagonal.
+    This array records the linear index of the diagonal 
+    entry, `das[k]`, in a given column `k`. 
+    The `das[0]` address is for an dummy 0-th column.
+
+The indexing is developed to mimic dense-matrix addressing.
 """
 
-module Ldlt
+module Ldlt5
 
-import Base: size
+import Base
 using LinearAlgebra
 import SparseArrays: findnz, nnz
 import SparseArrays: sparse
+using OffsetArrays
 
 struct SkylineMatrix{IT, T}
-    dim::Int64
-    das::Vector{IT}
-    coefficients::Vector{T}
-end
-
-size(A::SkylineMatrix) = (A.dim, A.dim)
-
-function SkylineMatrix(das::Vector{IT}, z = zero(T)) where {IT, T}
-    dim = length(das)
-    coefficients = fill(z, das[end])
-    return SkylineMatrix(dim, das, coefficients)
+    # Dimension of the square matrix
+    dim::IT 
+    # The entries are ordered column-by-column, from 
+    # the first non zero entry in each column down to the diagonal.
+    # This array records the linear index of the diagonal 
+    # entry, `das[k]`, in a given column `k`. 
+    # The `das[0]` address is for a dummy 0-th column.
+    das::OffsetVector{IT, Vector{IT}}
+    # Stored entries of the matrix
+    coefficients::Vector{T} 
 end
 
 function _update_skyline!(column_heights, dofnums)
@@ -43,22 +47,30 @@ function _update_skyline!(column_heights, dofnums)
 end
 
 function _diagonal_addresses(column_heights)
-    d = fill(0, length(column_heights))
-    d .= column_heights
-    d[1] = 1
-    for i in 2:length(d)
-        d[i] = d[i-1] + d[i]
-    end
-    return d
+    return OffsetArray(vcat([0], cumsum(column_heights)), 0:length(column_heights))
 end
 
-nnz(A::SkylineMatrix{IT, T}) where {IT, T} = A.das[end]
+nnz(A::SkylineMatrix{IT, T}) where {IT, T} = A.das[end] 
 
-_cs(das, c) = das[c] - c
-idx(das, r, c) = _cs(das, c) + r
-li(r, cs) = cs + r
-li(r::UnitRange{Int64}, cs) = cs .+ r
-firstr(das, c) = (c > 1 ? c - (das[c] - das[c-1]) + 1 : 1)
+# Private functions implementing access to the entries of the skyline matrix.
+
+# Compute the column offset. The entries of column c start at (_co(das, c)+1).
+_co(das, c) = das[c] - c
+# Compute the row index of the first entry in column c.
+_1str(sky, c) =  sky.das[c-1] - _co(sky.das, c) + 1 
+
+Base.IndexStyle(::Type{<:SkylineMatrix}) = IndexLinear()
+Base.size(sky::SkylineMatrix) = (sky.dim, sky.dim)
+Base.size(sky::SkylineMatrix, which) = size(sky)[which]
+function Base.getindex(sky::SkylineMatrix{IT, T}, r::IT, c::IT) where {IT, T} 
+    sky.coefficients[_co(sky.das, c) + r]
+end
+function Base.getindex(sky::SkylineMatrix{IT, T}, r::UnitRange{IT}, c::IT) where {IT, T} 
+     @views sky.coefficients[_co(sky.das, c) .+ (r)]
+end
+function Base.setindex!(sky::SkylineMatrix{IT, T}, v::T, r::IT, c::IT) where {IT} 
+    sky.coefficients[_co(sky.das, c) + r] = v
+end
 
 function SkylineMatrix(I::Vector{IT}, J::Vector{IT}, V::Vector{T}, m) where {IT, T}
     dim = m
@@ -75,31 +87,28 @@ function SkylineMatrix(I::Vector{IT}, J::Vector{IT}, V::Vector{T}, m) where {IT,
         r = I[i]; c = J[i]
         if r != 0 && c != 0
             if c >= r
-                cs = _cs(das, c)
-                coefficients[li(r, cs)] += V[i] 
+                coefficients[_co(das, c) + r] += V[i] 
             end
         end
     end
     return SkylineMatrix(dim, das, coefficients)
 end
 
-
 function findnz(sky::SkylineMatrix{IT, T}; symm = true) where {IT, T}
-    das = sky.das
     I = IT[]
     J = IT[]
     V = T[]
-    for c in 1:length(das)
-        for r in firstr(das, c):c
-            lk = idx(das, r, c)
-            if sky.coefficients[lk] != zero(T) 
+    for c in 1:sky.dim
+        for r in _1str(sky, c):c
+            v = sky[r, c]
+            if v != zero(T) 
                 push!(I, r)
                 push!(J, c)
-                push!(V, sky.coefficients[lk])
+                push!(V, v)
                 if r != c && symm
                     push!(I, c)
                     push!(J, r)
-                    push!(V, sky.coefficients[lk])
+                    push!(V, v)
                 end
             end
         end
@@ -111,27 +120,6 @@ function sparse(sky::SkylineMatrix{IT, T}; symm = true) where {IT, T}
     M = sky.dim
     I, J, V = findnz(sky; symm = symm)
     return sparse(I, J, V, M, M)
-end
-
-function dense_1!(F)
-    M = size(F, 1)
-    for j in 2:M
-        for i in 1:j-1
-            s = F[i, j]
-            for r in 1:i-1
-                s -= F[r, i]*F[r, j];
-            end
-            F[i, j] = s
-        end
-        s = F[j, j]
-        for r in 1:j-1
-            t = F[r, j] / F[r, r]
-            s -= t*F[r, j];
-            F[r, j] = t
-        end
-        F[j, j] = s
-    end
-    F
 end
 
 function dense_ldlt!(F)
@@ -151,37 +139,27 @@ function dense_ldlt!(F)
     F
 end
 
-function _inner_factorize!(M, F, das)
-    for j in 2:M
-        js = _cs(das, j)
-        frj = firstr(das, j)
-        @inbounds for i in 1:j-1
-            fri = firstr(das, i)
-            frij = max(fri, frj)
+function factorize!(F::MT) where {MT<:SkylineMatrix}
+    for j in 2:size(F, 2)
+        frj = _1str(F, j)
+        for i in frj:j-1
+            frij = max(_1str(F, i), frj)
             if frij <= i-1
-                is = _cs(das, i)
-                F[li(i, js)] -= @views dot(F[li(frij:i-1, is)], F[li(frij:i-1, js)])
+                F[i, j] -= dot(F[frij:i-1, i], F[frij:i-1, j])
             end
         end
-        s = F[li(j, js)]
+        s = F[j, j]
         for r in frj:j-1
-            rs = _cs(das, r)
-            t = F[li(r, js)] / F[li(r, rs)]
-            s -= t*F[li(r, js)];
-            F[li(r, js)] = t
+            t = F[r, j] / F[r, r]
+            s -= t*F[r, j];
+            F[r, j] = t
         end
-        F[li(j, js)] = s
+        F[j, j] = s
     end
 end
-
-function factorize!(A::MT) where {MT<:SkylineMatrix}
-    _inner_factorize!(A.dim, A.coefficients, A.das)
-end
  
-function solve(A::MT, rhs) where {MT<:SkylineMatrix}
-    F = A.coefficients
-    das = A.das
-    M = A.dim
+function solve(F::MT, rhs) where {MT<:SkylineMatrix}
+    M = size(F, 1)
     x = fill(0.0, length(rhs))
     # Solve L * z = b
     b = deepcopy(rhs)
@@ -189,22 +167,22 @@ function solve(A::MT, rhs) where {MT<:SkylineMatrix}
     z[1] = b[1]
     for j in 2:M
         s = 0.0
-        for k in firstr(das, j):j-1
-            s += F[idx(das, k, j)] * z[k]
+        for k in _1str(F, j):j-1
+            s += F[k, j] * z[k]
         end
         z[j] = (b[j] - s)
     end
     # Solve L' * x = D^-1 * z
     for j in 1:M
-        z[j] /= F[idx(das, j, j)]
+        z[j] /= F[j, j]
     end
     x[M] = z[M]
     for j in M-1:-1:1
         s = 0.0
         for k in j+1:M 
-            r = firstr(das, k)
+            r = _1str(F, k)
             if j >= r
-                s += F[idx(das, j, k)] * x[k]
+                s += F[j, k] * x[k]
             end
         end
         x[j] = (z[j] - s) 

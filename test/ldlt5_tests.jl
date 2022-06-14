@@ -1,8 +1,48 @@
 
-module mldlt3005
+module mldlt5001
+using Test
+using SkylineSolvers.Ldlt5: _update_skyline!
+
+function test()
+    dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
+    bars = [1 2; 1 6; 6 5; 5 2; 6 2; 2 3; 3 4; 2 4]
+    skylngs = fill(0, maximum(dofnums[:]))
+    for b in 1:size(bars, 1)
+        _update_skyline!(skylngs, [d for d in dofnums[bars[b, :], :]])
+    end
+    # @show skylngs
+    @test skylngs == [1, 2, 3, 4, 5, 6, 7, 8, 3, 4, 5, 6]
+    true
+end
+end
+using .mldlt5001
+mldlt5001.test()
+
+module mldlt5002
+using Test
+using SkylineSolvers.Ldlt5: _update_skyline!, _diagonal_addresses
+using OffsetArrays
+function test()
+    dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
+    bars = [1 2; 1 6; 6 5; 5 2; 6 2; 2 3; 3 4; 2 4]
+    skylngs = fill(0, maximum(dofnums[:]))
+    for b in 1:size(bars, 1)
+        _update_skyline!(skylngs, [d for d in dofnums[bars[b, :], :]])
+    end
+    # @show skylngs
+    @test skylngs == [1, 2, 3, 4, 5, 6, 7, 8, 3, 4, 5, 6]
+    d = _diagonal_addresses(skylngs)
+    @test d == OffsetArray([0, 1, 3, 6, 10, 15, 21, 28, 36, 39, 43, 48, 54], 0:12)  
+    true
+end
+end
+using .mldlt5002
+mldlt5002.test()
+
+module mldlt5005
 using Test
 using LinearAlgebra
-using SkylineSolvers.Ldlt3: SkylineMatrix, factorize!, solve
+using SkylineSolvers.Ldlt5: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     A = [        
@@ -31,51 +71,12 @@ function test()
     true
 end
 end
-using .mldlt3005
-mldlt3005.test()
+using .mldlt5005
+mldlt5005.test()
 
-module mldlt3001
+module mldlt5004
 using Test
-using SkylineSolvers.Ldlt3: _update_skyline!
-
-function test()
-    dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
-    bars = [1 2; 1 6; 6 5; 5 2; 6 2; 2 3; 3 4; 2 4]
-    skylngs = fill(0, maximum(dofnums[:]))
-    for b in 1:size(bars, 1)
-        _update_skyline!(skylngs, [d for d in dofnums[bars[b, :], :]])
-    end
-    # @show skylngs
-    @test skylngs == [1, 2, 3, 4, 5, 6, 7, 8, 3, 4, 5, 6]
-    true
-end
-end
-using .mldlt3001
-mldlt3001.test()
-
-module mldlt3002
-using Test
-using SkylineSolvers.Ldlt3: _update_skyline!, _diagonal_addresses
-function test()
-    dofnums = [3 4; 7 8; 11 12; 9 10; 5 6; 1 2]
-    bars = [1 2; 1 6; 6 5; 5 2; 6 2; 2 3; 3 4; 2 4]
-    skylngs = fill(0, maximum(dofnums[:]))
-    for b in 1:size(bars, 1)
-        _update_skyline!(skylngs, [d for d in dofnums[bars[b, :], :]])
-    end
-    # @show skylngs
-    @test skylngs == [1, 2, 3, 4, 5, 6, 7, 8, 3, 4, 5, 6]
-    d = _diagonal_addresses(skylngs)
-    @test d == [1, 2, 4, 7, 11, 16, 22, 29, 37, 40, 44, 49, 55]  
-    true
-end
-end
-using .mldlt3002
-mldlt3002.test()
-
-module mldlt3004
-using Test
-using SkylineSolvers.Ldlt3: SkylineMatrix, findnz
+using SkylineSolvers.Ldlt5: SkylineMatrix, findnz
 using SparseArrays
 function test()
     for s in [0.5, 0.2, 0.1, 0.05]
@@ -92,12 +93,12 @@ function test()
     true
 end
 end
-using .mldlt3004
-mldlt3004.test()
+using .mldlt5004
+mldlt5004.test()
 
-module mldlt3004a
+module mldlt5004a
 using Test
-using SkylineSolvers.Ldlt3: SkylineMatrix, sparse
+using SkylineSolvers.Ldlt5: SkylineMatrix, sparse
 using SparseArrays
 function test()
     for s in [0.5, 0.2, 0.1, 0.05]
@@ -113,13 +114,13 @@ function test()
     true
 end
 end
-using .mldlt3004a
-mldlt3004a.test()
+using .mldlt5004a
+mldlt5004a.test()
 
-module mldlt3005a
+module mldlt5005a
 using Test
 using LinearAlgebra
-using SkylineSolvers.Ldlt3: SkylineMatrix, factorize!, solve
+using SkylineSolvers.Ldlt5: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     A = [
@@ -140,13 +141,13 @@ function test()
     true
 end
 end
-using .mldlt3005a
-mldlt3005a.test()
+using .mldlt5005a
+mldlt5005a.test()
 
-module mldlt3005b
+module mldlt5005b
 using Test
 using LinearAlgebra
-using SkylineSolvers.Ldlt3: SkylineMatrix, factorize!, solve
+using SkylineSolvers.Ldlt5: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     A = [
@@ -171,14 +172,14 @@ function test()
     true
 end
 end
-using .mldlt3005b
-mldlt3005b.test()
+using .mldlt5005b
+mldlt5005b.test()
 
 
-module mldlt3005c
+module mldlt5005c
 using Test
 using LinearAlgebra
-using SkylineSolvers.Ldlt3: SkylineMatrix, factorize!, solve
+using SkylineSolvers.Ldlt5: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     for s in [0.5, 0.2, 0.1, 0.05]
@@ -196,14 +197,14 @@ function test()
     true
 end
 end
-using .mldlt3005c
-mldlt3005c.test()
+using .mldlt5005c
+mldlt5005c.test()
 
 
-module mldlt3005d
+module mldlt5005d
 using Test
 using LinearAlgebra
-using SkylineSolvers.Ldlt3: SkylineMatrix, factorize!, solve
+using SkylineSolvers.Ldlt5: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     total = 0
@@ -225,13 +226,13 @@ function test()
     true
 end
 end
-using .mldlt3005d
-mldlt3005d.test()
+using .mldlt5005d
+mldlt5005d.test()
 
-module mldlt3005e
+module mldlt5005e
 using Test
 using LinearAlgebra
-using SkylineSolvers.Ldlt3: SkylineMatrix, factorize!, solve
+using SkylineSolvers.Ldlt5: SkylineMatrix, factorize!, solve
 using SparseArrays
 function test()
     total = 0
@@ -253,5 +254,5 @@ function test()
     true
 end
 end
-using .mldlt3005e
-mldlt3005e.test()
+using .mldlt5005e
+mldlt5005e.test()
