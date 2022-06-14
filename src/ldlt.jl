@@ -3,7 +3,7 @@
 
 Skyline matrix storage of a symmetric matrix. L*D*L^T factorization and solution.
 
-Version 5 developed from scratch.
+Version published at https://forem.julialang.org/petrkryslucsd/replacing-legacy-code-with-julia-52ff
 
 The entries are ordered column-by-column, from 
     the first non zero entry in each column down to the diagonal.
